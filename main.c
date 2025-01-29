@@ -192,7 +192,7 @@ void display_menu() {
 
 // Função principal
 int main() {
-    int difficulty = 2;  // Número de zeros iniciais exigidos no hash
+    int difficulty = 3;  // Número de zeros iniciais exigidos no hash
     Block *blockchain = NULL;
     int option;
     char data[256];
@@ -227,7 +227,7 @@ int main() {
 
             case 3:
                 if (blockchain != NULL) {
-                    printf("Exibindo a blockchain completa:\n");
+                    printf("\nExibindo a blockchain completa:\n");
                     print_blockchain(blockchain);
                 } else {
                     printf("Blockchain está vazia!\n");
