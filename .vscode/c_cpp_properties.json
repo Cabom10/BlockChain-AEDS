@@ -1,18 +1,22 @@
 {
   "configurations": [
-    {
-      "name": "linux-gcc-x64",
-      "includePath": [
-        "${workspaceFolder}/**"
-      ],
-      "compilerPath": "/usr/bin/gcc",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "linux-gcc-x64",
-      "compilerArgs": [
-        ""
-      ]
-    }
+      {
+          "name": "windows-gcc-x64",
+          "includePath": [
+              "${workspaceFolder}/**",
+              "C:/Program Files/OpenSSL-Win64/include"
+          ],
+          "compilerPath": "C:/TDM-GCC-64/bin/gcc.exe",  // Certifique-se de que o caminho esteja correto
+          "cStandard": "c11",  // ou a versão que você preferir
+          "cppStandard": "c++17",  // ou a versão que você preferir
+          "intelliSenseMode": "windows-gcc-x64",
+          "compilerArgs": [
+              "-I\"C:/Program Files/OpenSSL-Win64/include\"",
+              "-L\"C:/Program Files/OpenSSL-Win64/lib/VC/x64/MD\"",
+              "-lssl",
+              "-lcrypto"
+          ]
+      }
   ],
   "version": 4
 }

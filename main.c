@@ -82,6 +82,8 @@ void build_merkle_tree(Block *block)
         {
             char *combined = (char *)malloc(130); // espaço para 2 hashes
             snprintf(combined, 130, "%s%s", tx_hashes[2 * i], tx_hashes[2 * i + 1]);
+            free(tx_hashes[i]); // liberar hashes antigos
+
             tx_hashes[i] = (char *)malloc(65);
             unsigned char hash[SHA256_DIGEST_LENGTH];
             SHA256((unsigned char *)combined, strlen(combined), hash);
@@ -91,6 +93,7 @@ void build_merkle_tree(Block *block)
             {
                 sprintf(tx_hashes[i] + (j * 2), "%02x", hash[j]);
             }
+
             tx_hashes[i][64] = '\0';
 
             free(combined);
@@ -98,6 +101,7 @@ void build_merkle_tree(Block *block)
 
         if (n % 2 == 1)
         {
+            free(tx_hashes[n/2]); // liberar hashes antigos
             tx_hashes[n / 2] = tx_hashes[n - 1];
             n = (n / 2) + 1;
         }
@@ -113,7 +117,10 @@ void build_merkle_tree(Block *block)
     // Libera a memória alocada para os hashes das transações
     for (int i = 0; i < block->transaction_count; i++)
     {
-        free(tx_hashes[i]);
+        if(tx_hashes[i] != NULL) {
+            free(tx_hashes[i]);
+        }
+
     }
 }
 
@@ -193,6 +200,65 @@ void print_blockchain(Block *blockchain)
         current = current->next;
     }
 }
+//calculo da merkle sem modificar bloco
+void calculate_merkle_root(Block *block, char *output)
+{
+    if (block->transaction_count == 0)
+    {
+        strcpy(output, "0");
+        return;
+    }
+
+    // Calcula os hashes das transações
+    char *tx_hashes[block->transaction_count];
+    for (int i = 0; i < block->transaction_count; i++)
+    {
+        tx_hashes[i] = (char *)malloc(65);
+        calculate_transaction_hash(&block->transactions[i], tx_hashes[i]);
+    }
+
+    // Construção da árvore de Merkle
+    int n = block->transaction_count;
+    while (n > 1)
+    {
+        for (int i = 0; i < n / 2; i++)
+        {
+            char *combined = (char *)malloc(130); // espaço para 2 hashes
+            snprintf(combined, 130, "%s%s", tx_hashes[2 * i], tx_hashes[2 * i + 1]);
+            tx_hashes[i] = (char *)malloc(65);
+            unsigned char hash[SHA256_DIGEST_LENGTH];
+            SHA256((unsigned char *)combined, strlen(combined), hash);
+
+            // Converte o hash para uma string hexadecimal
+            for (int j = 0; j < SHA256_DIGEST_LENGTH; j++)
+            {
+                sprintf(tx_hashes[i] + (j * 2), "%02x", hash[j]);
+            }
+            tx_hashes[i][64] = '\0';
+
+            free(combined);
+        }
+
+        if (n % 2 == 1)
+        {
+            tx_hashes[n / 2] = tx_hashes[n - 1];
+            n = (n / 2) + 1;
+        }
+        else
+        {
+            n = n / 2;
+        }
+    }
+
+    // O hash da raiz da Merkle Tree é o primeiro hash gerado
+    strcpy(output, tx_hashes[0]);
+
+    // Libera a memória alocada para os hashes das transações
+    for (int i = 0; i < block->transaction_count; i++)
+    {
+        free(tx_hashes[i]);
+    }
+}
 
 // Função para validar a blockchain
 int validar(Block *blockchain)
@@ -231,7 +297,7 @@ int validar(Block *blockchain)
 
         // Valida a Merkle Root
         char calculated_merkle_root[65];
-        build_merkle_tree(current);
+        calculate_merkle_root(current, calculated_merkle_root);
         if (strncmp(current->hashroot, calculated_merkle_root, 64) != 0 && (current->index != 0))
         {
             printf("Falha na validação! A Merkle Root do bloco %d está incorreta.\n", current->index);
@@ -244,6 +310,27 @@ int validar(Block *blockchain)
     printf("Blockchain válida!\n");
     return 1;
 }
+
+
+void free_blockchain(Block *blockchain)
+{
+    Block *current = blockchain;
+    while (current != NULL)
+    {
+        Block *temp = current;
+        current = current->next;
+
+        // Libera as transações do bloco
+        if (temp->transactions != NULL)
+        {
+            free(temp->transactions);
+        }
+
+        // Libera o bloco
+        free(temp);
+    }
+}
+
 void ataque(Block *blockchain)
 {
     // Vamos fazer um ataque no segundo bloco da cadeia
@@ -373,14 +460,7 @@ int main()
         }
     } while (option != 6);
 
-    // Liberação de memória
-    Block *current = blockchain;
-    while (current != NULL)
-    {
-        Block *temp = current;
-        current = current->next;
-        free(temp);
-    }
 
+    free_blockchain(blockchain);
     return 0;
 }

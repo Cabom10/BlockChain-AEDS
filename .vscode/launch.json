@@ -1,24 +1,28 @@
 {
-  "version": "0.2.0",
-  "configurations": [
+  "version": "2.0.0",
+  "tasks": [
     {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppdbg",
-      "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": false,
-      "cwd": "/home/hugo/Documentos/GitHub/BlockChain-AEDS",
-      "program": "/home/hugo/Documentos/GitHub/BlockChain-AEDS/build/Debug/outDebug",
-      "MIMode": "gdb",
-      "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "label": "build blockchain",
+      "type": "shell",
+      "command": "C:/TDM-GCC-64/bin/gcc.exe",
+      "args": [
+        "-Wall",
+        "-Wextra",
+        "-g3",
+        "-I\"C:/Program Files/OpenSSL-Win64/include\"",
+        "-L\"C:/Program Files/OpenSSL-Win64/lib/VC/x64/MD\"",
+        "-lssl",
+        "-lcrypto",
+        "d:/area de trabalho/facul/codigos/BlockChain-AEDS/main.c",
+        "-o",
+        "d:/area de trabalho/facul/codigos/BlockChain-AEDS/output/main.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "detail": "Compiling blockchain program"
     }
   ]
 }
