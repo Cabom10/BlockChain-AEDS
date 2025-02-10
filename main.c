@@ -311,7 +311,7 @@ void ataque(Block *blockchain) {
     }
 }
 
-int get_merkle_proof(Block *block, const char *transaction_data, char *proof[],
+int get_merkle_proof(Block *block, const char *transaction_data, char proof[][65],
                      int *proof_size) {
     if (block->transaction_count == 0) {
         *proof_size = 0;
@@ -332,8 +332,8 @@ int get_merkle_proof(Block *block, const char *transaction_data, char *proof[],
             while (n > 1) {
                 int sibling_index = (index % 2 == 0) ? index + 1 : index - 1;
                 if (sibling_index < n) {
-                    proof[*proof_size] = (char *)malloc(65);
-                    strcpy(proof[*proof_size], block->transactions[sibling_index].data);
+                    strncpy(proof[*proof_size], block->transactions[sibling_index].data,
+                            65);
                     (*proof_size)++;
                 }
                 index /= 2;
@@ -349,17 +349,24 @@ int get_merkle_proof(Block *block, const char *transaction_data, char *proof[],
 // Função para verificar se a transação está em um bloco, considerando o hash da transação
 int verify_transaction_in_block(Block *blockchain, const char *transaction_data) {
     Block *current = blockchain;
-    
-    // Calcular o hash da transação digitada pelo usuário
+
+    Transaction tx;
+    strncpy(
+        tx.data, transaction_data,
+        sizeof(tx.data) - 1);  // Presume-se que Transaction tenha um campo char data[]
+    tx.data[sizeof(tx.data) - 1] = '\0';  // Garantir terminação nula
+
+    // Calcular o hash da transação
     char target_hash[65];
-    calculate_transaction_hash(transaction_data, target_hash); 
+    calculate_transaction_hash(&tx, target_hash);
 
     while (current != NULL) {
-        char proof[100][65]; // Espaço para armazenar até 100 hashes na prova
+        char proof[100][65];  // Espaço para armazenar até 100 hashes na prova
         int proof_size = 0;
         int found = 0;
 
-        // Verificar se a transação realmente existe no bloco antes de calcular a Merkle Proof
+        // Verificar se a transação realmente existe no bloco antes de calcular a Merkle
+        // Proof
         for (int i = 0; i < current->transaction_count; i++) {
             char transaction_hash[65];
             calculate_transaction_hash(&current->transactions[i], transaction_hash);
@@ -374,7 +381,7 @@ int verify_transaction_in_block(Block *blockchain, const char *transaction_data)
         if (found && get_merkle_proof(current, target_hash, proof, &proof_size)) {
             printf("Transação encontrada no bloco #%d.\n", current->index);
             printf("Prova de Inclusão: VERDADEIRO\n");
-            return 1; // Transação encontrada
+            return 1;  // Transação encontrada
         }
 
         current = current->next;
@@ -382,7 +389,7 @@ int verify_transaction_in_block(Block *blockchain, const char *transaction_data)
 
     printf("Transação NÃO encontrada.\n");
     printf("Prova de Inclusão: FALSO\n");
-    return 0; // Transação não encontrada em nenhum bloco
+    return 0;  // Transação não encontrada em nenhum bloco
 }
 
 void display_menu() {
